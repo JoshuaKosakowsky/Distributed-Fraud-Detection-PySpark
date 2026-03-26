@@ -2,7 +2,10 @@ app_name: "MSBX5420 Final Project"
 env: "local"
 
 paths:
-  raw: "data/raw"
+  raw: "data/raw/credit_card_transactions.csv"
+  raw_local: "data/raw"
+  raw_sample: "data/sample"
+  raw_s3: "s3://your-team-bucket/credit-card-transactions/raw"
   processed: "data/processed"
   outputs_tables: "outputs/tables"
   outputs_figures: "outputs/figures"

@@ -166,6 +166,21 @@ outputs/*
 !data/**/.gitkeep
 !outputs/**/.gitkeep
 
+# Large files
+*.zip
+*.csv
+*.parquet
+*.feather
+*.h5
+
+# -------------------------
+# Logs / outputs
+# -------------------------
+outputs/logs/*
+outputs/tables/*
+outputs/figures/*
+
+
 # Python
 __pycache__/
 *.pyc
@@ -179,3 +194,10 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# -------------------------
+# Secrets 
+# -------------------------
+.env
+*.env
+kaggle.json

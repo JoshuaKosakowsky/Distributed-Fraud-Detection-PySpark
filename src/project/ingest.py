@@ -1,20 +1,52 @@
 from pyspark.sql import SparkSession, DataFrame
-from pathlib import Path
+import os
+
 
 def ingest(spark: SparkSession, path: str) -> DataFrame:
     """
-    Load raw data into a Spark DataFrame.
-
-    If no data exists, returns a small sample DataFrame
-    so the pipeline can still run.
+    Ingest data from:
+    - Local path (data/raw/)
+    - S3 (s3://...)
+    - Fallback to sample data if not found
     """
-    p = Path(path)
 
-    if p.exists() and list(p.glob("*.csv")):
-        return spark.read.option("header", True).csv(str(p / "*.csv"))
+    print(f"[INGEST] Attempting to read from: {path}")
 
-    # Fallback sample data
-    return spark.createDataFrame(
-        [(1, "sample"), (2, "data")],
-        ["id", "value"]
+    # -------------------------
+    # Case 1: S3 path
+    # -------------------------
+    if path.startswith("s3://"):
+        print("[INGEST] Detected S3 path")
+        return spark.read.option("header", True).csv(path)
+
+    # -------------------------
+    # Case 2: Local path exists
+    # -------------------------
+    if os.path.exists(path):
+        print("[INGEST] Found local dataset")
+        return spark.read.option("header", True).csv(path)
+
+    # -------------------------
+    # Case 3: Fallback sample
+    # -------------------------
+    sample_path = "data/sample/sample.csv"
+
+    if os.path.exists(sample_path):
+        print("[INGEST] Using sample dataset fallback")
+        return spark.read.option("header", True).csv(sample_path)
+
+    # -------------------------
+    # Fail cleanly
+    # -------------------------
+    raise FileNotFoundError(
+        f"""
+        Dataset not found.
+
+        Checked:
+        - {path}
+        - {sample_path}
+
+        Please download the dataset and place it in data/raw/
+        or configure an S3 path.
+        """
     )
