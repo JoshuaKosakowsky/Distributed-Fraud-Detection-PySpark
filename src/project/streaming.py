@@ -9,7 +9,7 @@ import pandas as pd
 def prepare_stream_batches(
     source_csv: str,
     batch_dir: str,
-    rows_per_file: int = 5000,
+    rows_per_file: int = 500,
     overwrite: bool = False
 ):
     source_path = Path(source_csv)
