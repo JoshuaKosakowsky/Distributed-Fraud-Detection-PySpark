@@ -203,3 +203,4 @@ Thumbs.db
 .env
 *.env
 kaggle.json
+*.pem
