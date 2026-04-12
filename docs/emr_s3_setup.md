@@ -1,387 +1,451 @@
 # AWS EMR + S3 Setup Guide (Project)
 
-> ⚠️ FIRST TIME MAC/LINUX USERS: Complete the PEM setup section before attempting to connect to the cluster.
+> ⚠️ First-time: complete the PEM setup section before trying to connect.
 
 ---
 
-# 🧠 Overview
+# Overview
 
-This project uses AWS EMR for distributed computing and S3 for shared data storage.
+This project uses:
 
-All team data must be stored in:
+- **AWS EMR** for distributed PySpark computation
+- **Amazon S3** for shared data storage
+- **JupyterHub on EMR** for notebooks
 
-**s3://msbx5420-2026/teams/team_15**
+For deployment on EMR, our dataset is stored in:
+
+```text
+s3://msbx5420-2026/teams/team_15/
+```
 
 This guide walks through:
 
-1. Setting up your `.pem` key  
-2. Connecting to the EMR cluster  
-3. Creating your team workspace  
-4. Uploading project files  
-5. Uploading data to S3  
-6. Running notebooks  
+1. Setting up your `.pem` key
+2. Connecting to the EMR cluster
+3. Creating your team workspace
+4. Uploading files from your machine
+5. Copying data to S3
+6. Opening JupyterHub
+7. Reading data from S3 in PySpark
 
 ---
 
-## 🔑 PART 0 — PEM FILE SETUP
+## Why move or copy the `.pem` file?
 
-### 🧠 What is `~`?
+In Lab 7, `MSBX5420.pem` was kept inside the lab folder.
 
-On Mac/Linux:
+That works, but it is inconvenient because it makes it seem like you must always `cd` into that folder before using `ssh` or `scp`.
 
-```
-~
-```
+You do **not** need to keep:
 
-means your home directory:
+- the `.pem` file
+- your dataset
+- your project folder
 
-```
-/Users/your-username
-```
+all in the same place.
 
-Example:
+A cleaner setup is:
 
-```
-~/keys/MSBX5420.pem
-```
-
-is:
-
-```
-/Users/your-username/keys/MSBX5420.pem
-```
+- keep the key in one permanent location
+- keep your repo wherever you want
+- keep your dataset wherever you want
+- use paths explicitly in your commands
 
 ---
 
-## 🔁 If you already have the `.pem` file from Lab 7
+# PART 0 — PEM FILE SETUP
 
-In Lab 7, the `.pem` file was placed inside your `lab7` folder.
+## Mac Setup
 
-We will **copy it** into a standard location so it can be reused across projects.
+### Step 1 — Create a keys folder
 
-### Step 1 — Create keys folder
-
-```
+```bash
 mkdir -p ~/keys
 ```
 
-### Step 2 — Copy the `.pem` file
+---
 
-If your `lab7` folder is in your home directory:
+### Step 2 — Copy the `.pem` from Lab 7
 
-```
-cp ~/lab7/MSBX5420.pem ~/keys/
-```
+Your `.pem` file already exists from Lab 7.
 
-If your `lab7` folder is elsewhere, adjust the path accordingly.
+Example path (adjust if needed):
 
-### 🔍 Not sure where your `.pem` file is?
-
-Run:
-
-```
-find ~ -name "MSBX5420.pem" 2>/dev/null
+```bash
+cp "/Users/your-username/lab7/MSBX5420.pem" ~/keys/
 ```
 
-Then copy from the location shown.
+---
 
 ### Step 3 — Set permissions
 
-```
+```bash
 chmod 600 ~/keys/MSBX5420.pem
 ```
 
+---
+
 ### Step 4 — Verify
 
-```
+```bash
 ls ~/keys
 ```
 
 You should see:
 
-```
-MSBX5420.pem
-```
-
-### 💡 Why we COPY instead of MOVE
-
-- Keeps Lab 7 folder intact  
-- Avoids breaking previous work  
-- Ensures a consistent key location  
-
----
-
-## 🆕 If you downloaded the `.pem` file separately
-
-### Step 1 — Create keys folder
-
-```
-mkdir -p ~/keys
-```
-
-### Step 2 — Move file from Downloads
-
-```
-mv ~/Downloads/MSBX5420.pem ~/keys/
-```
-
-### Step 3 — Set permissions
-
-```
-chmod 600 ~/keys/MSBX5420.pem
-```
-
-### Step 4 — Verify
-
-```
-ls ~/keys
-```
-
-You should see:
-
-```
+```bash
 MSBX5420.pem
 ```
 
 ---
 
-## 🪟 Windows Setup (PowerShell)
+## Windows Setup (PowerShell / Command Prompt)
 
-### Step 1 — Create folder
+### Step 1 — Create a keys folder
 
-```
+Open PowerShell:
+
+```powershell
 mkdir C:\keys
 ```
 
-### Step 2 — Move file
+---
 
-Move `MSBX5420.pem` into:
+### Step 2 — Copy the `.pem` from Lab 7
 
+Locate your Lab 7 folder (where your `.pem` already exists).
+
+Example path (adjust if needed):
+
+```powershell
+copy "C:\Users\your-username\lab7\MSBX5420.pem" C:\keys\
 ```
+
+You can also drag and drop the file into:
+
+```text
 C:\keys\
 ```
 
-### Step 3 — Use this path later
+---
 
+### Step 3 — Verify
+
+```powershell
+dir C:\keys
 ```
-C:\keys\MSBX5420.pem
+
+You should see:
+
+```text
+MSBX5420.pem
 ```
 
 ---
 
-## ⚠️ Important Rules
+## Important Notes
 
-- Do NOT store `.pem` in this repository  
-- Do NOT upload `.pem` to GitHub  
-- The `.pem` file is your authentication key  
-- The `.pem` file is **provided**, not created  
+- Windows does NOT require `chmod`
+- You do NOT need to `cd` into the key folder before using it
+- The key can live in a completely different location than your dataset or project
 
-# 🖥️ PART 1 — CONNECT TO CLUSTER
+---
 
-## 🍎 Mac
+# PART 1 — CONNECT TO THE EMR CLUSTER
 
+## Cluster addresses
+
+### Cluster 1
+
+```text
+ec2-54-202-219-129.us-west-2.compute.amazonaws.com
 ```
-ssh -i ~/keys/MSBX5420.pem hadoop@ec2-52-32-236-168.us-west-2.compute.amazonaws.com
+
+### Cluster 2
+
+```text
+ec2-35-91-212-82.us-west-2.compute.amazonaws.com
 ```
 
 ---
 
-## 🪟 Windows
+## Mac Connection
 
-```
-ssh -i C:\keys\MSBX5420.pem hadoop@ec2-52-32-236-168.us-west-2.compute.amazonaws.com
-```
-
----
-
-## ✅ First-time connection
-
-- Type **yes** when prompted  
-- You should see:
-
-```
-hadoop@ip-xxx-xxx-xxx
+```bash
+ssh -i ~/keys/MSBX5420.pem hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com
 ```
 
 ---
 
-# 📁 PART 2 — CHECK / CREATE TEAM DIRECTORY
+## Windows Connection
 
+```powershell
+ssh -i C:\keys\MSBX5420.pem hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com
 ```
+
+---
+
+## First-time connection
+
+Type:
+
+```bash
+yes
+```
+
+You should see:
+
+```bash
+[hadoop@ip-... ~]$
+```
+
+---
+
+# PART 2 — CHECK OR CREATE YOUR TEAM DIRECTORY (ON CLUSTER)
+
+```bash
 cd /mnt1/msbx5420_teams
 ls
 ```
 
----
-
-## 🔍 Check for your team folder
-
 Look for:
 
-```
+```bash
 team_15
 ```
 
----
+If it exists:
 
-## 🆕 FIRST TIME SETUP
-
-```
-mkdir team_15
-cd team_15
+```bash
+cd /mnt1/msbx5420_teams/team_15
 ```
 
----
+If not:
 
-## 🔁 RE-ENTRY
-
-```
-cd team_15
-ls
+```bash
+mkdir /mnt1/msbx5420_teams/team_15
+cd /mnt1/msbx5420_teams/team_15
 ```
 
 ---
 
-# 📤 PART 3 — UPLOAD PROJECT FROM LOCAL MACHINE
+# PART 3 — UPLOADING FILES (KEY AND DATA DO NOT NEED TO MATCH LOCATIONS)
 
-Exit cluster:
+## IMPORTANT — Run this from your local machine
 
-```
+All upload commands in this section must be run from your **local machine**, NOT from inside the cluster.
+
+If you are still connected to the cluster, exit first:
+
+```bash
 exit
 ```
 
+### Quick Check
+
+Before running `scp`, check your terminal prompt:
+
+- If you see something like:
+  ```bash
+  user@local-machine ~ %
+  ```
+  for Mac
+
+  *or*
+
+  ```powershell
+  "C:\Users\your-username\
+  ```
+  for PC
+
+  you are on your local machine (correct)
+
+- If you see something like:
+  ```bash
+  [hadoop@ip-... ~]$
+  ```
+  you are on the cluster (incorrect for `scp`)
+
 ---
 
-## Upload project folder
+You do NOT need to place your dataset in the same folder as your `.pem`.
 
+`scp` allows you to:
+
+- specify the key location
+- specify the file location
+- specify the destination independently
+
+---
+
+# PART 4 — UPLOAD A SINGLE FILE (From Local)
+
+If your file or folder path contains spaces, wrap the local path in quotes:
+
+```bash
+scp -i ~/keys/MSBX5420.pem -r \
+"/path/with spaces/folder" \
+hadoop@host:/mnt1/msbx5420_teams/team_15/
 ```
-scp -i ~/keys/MSBX5420.pem -r ./MSBX_Final_Project_Spark \
-hadoop@ec2-52-32-236-168.us-west-2.compute.amazonaws.com:/mnt1/msbx5420_teams/team_15
+
+## Mac
+
+```bash
+scp -i ~/keys/MSBX5420.pem \
+~/Downloads/credit_card_transactions.csv \
+hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com:/mnt1/msbx5420_teams/team_15/
 ```
 
 ---
 
-## Reconnect and verify
+## Windows
 
+```powershell
+scp -i C:\keys\MSBX5420.pem ^
+C:\Users\your-username\Downloads\credit_card_transactions.csv ^
+hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com:/mnt1/msbx5420_teams/team_15/
 ```
-ssh -i ~/keys/MSBX5420.pem hadoop@ec2-52-32-236-168.us-west-2.compute.amazonaws.com
+
+---
+
+# PART 5 — UPLOAD AN ENTIRE FOLDER (From Local)
+
+## Mac
+
+```bash
+scp -i ~/keys/MSBX5420.pem -r \
+~/Documents/MSBX_Final_Project_Spark \
+hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com:/mnt1/msbx5420_teams/team_15/
+```
+
+---
+
+## Windows
+
+```powershell
+scp -i C:\keys\MSBX5420.pem -r ^
+C:\Users\your-username\Documents\MSBX_Final_Project_Spark ^
+hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com:/mnt1/msbx5420_teams/team_15/
+```
+
+---
+
+# PART 6 — COPY DATA TO S3 (On Cluster)
+
+## IMPORTANT — Reconnect to the Cluster
+
+This step must be run on the EMR cluster.
+
+If you are not currently connected, reconnect now:
+
+```bash
+ssh -i <path-to-key> hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com
+```
+
+```bash
 cd /mnt1/msbx5420_teams/team_15
-ls
+```
+
+Then run the following to upload a single file.
+
+```bash
+aws s3 cp credit_card_transactions.csv s3://msbx5420-2026/teams/team_15/
+```
+
+Run the following to upload a complete folder.
+
+```bash
+aws s3 cp emr s3://msbx5420-2026/teams/team_15/emr --recursive
 ```
 
 ---
 
-# ☁️ PART 4 — UPLOAD TO S3
+Verify:
 
-Navigate to project folder:
-
-```
-cd /mnt1/msbx5420_teams/team_15/MSBX_Final_Project_Spark
-```
-
----
-
-## Upload dataset
-
-```
-aws s3 cp data/raw/credit_card_transactions.csv \
-s3://msbx5420-2026/teams/team_15/data/raw/
-```
-
----
-
-## Upload entire data folder
-
-```
-aws s3 cp data/ \
-s3://msbx5420-2026/teams/team_15/data/ \
---recursive
-```
-
----
-
-## Verify upload
-
-```
+```bash
 aws s3 ls s3://msbx5420-2026/teams/team_15/
 ```
 
 ---
 
-# 📊 PART 5 — USING S3 IN PYSPARK
+# PART 7 — JUPYTERHUB (RUNNING YOUR PROJECT ON EMR)
 
-Always use S3 paths:
+We use JupyterHub on the EMR cluster to:
 
-```
-df = spark.read.csv(
-    "s3://msbx5420-2026/teams/team_15/data/raw/credit_card_transactions.csv",
-    header=True,
-    schema=TRANSACTION_SCHEMA
-)
-```
+- Run PySpark notebooks on the cluster
+- Execute your project code in a distributed environment
+- Work with data stored in S3
 
 ---
 
-# 📓 PART 6 — JUPYTERHUB (OPTIONAL)
+## Step 1 — Create JupyterHub user (FIRST TIME ONLY)
 
-## FIRST TIME ONLY
+After connecting to the cluster via SSH, run:
 
-```
+```bash
 sudo docker exec jupyterhub useradd -m -s /bin/bash -N {username}
 sudo docker exec jupyterhub bash -c "echo {username}:{password} | chpasswd"
 ```
 
----
+Replace `{username}` and `{password}` with your credentials.
 
-## EVERY TIME
-
-```
-ssh -i ~/keys/MSBX5420.pem -N -L localhost:8080:localhost:9443 \
-hadoop@ec2-52-32-236-168.us-west-2.compute.amazonaws.com
-```
+This only needs to be done once per user.
 
 ---
 
-## Open browser
+## Step 2 — Start SSH tunnel (from your machine)
 
+### Mac
+
+```bash
+ssh -i ~/keys/MSBX5420.pem -N -L localhost:8080:localhost:9443 hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com
+```
+
+---
+
+### Windows
+
+```powershell
+ssh -i C:\keys\MSBX5420.pem -N -L localhost:8080:localhost:9443 hadoop@ec2-54-202-219-129.us-west-2.compute.amazonaws.com
+```
+
+---
+
+## Step 3 — Open JupyterHub in browser
+
+Go to:
+
+```text
 https://localhost:8080
+```
 
-If blocked:
-- click Advanced  
-- OR type: thisisunsafe  
+If you see a security warning:
 
----
-
-# ⚠️ IMPORTANT RULES
-
-- Do NOT upload large files to JupyterHub  
-- Always use S3 for data  
-- Clean up cluster files after upload  
-- Only use `/mnt1/msbx5420_teams/team_15`  
+- click **Advanced** or **Details**
+- continue to the site  
+- OR type: `thisisunsafe`
 
 ---
 
-# 🚀 RECOMMENDED WORKFLOW
+## Step 4 — Log in
 
-1. Develop locally (Docker)  
-2. Test locally  
-3. Upload to S3  
-4. Run on EMR  
-5. Iterate  
+Use the username and password you created in Step 1.
 
 ---
 
-# ✅ SUMMARY
+## Step 5 — Run your project
 
-| Component | Purpose |
-|----------|--------|
-| `.pem` | authentication |
-| EMR | compute |
-| S3 | storage |
-| Jupyter | interface |
+Inside JupyterHub:
+
+- Open or upload your project notebook
+- Use the **PySpark kernel**
+- Run your existing pipeline and model code
+- Ensure your data paths point to S3
 
 ---
 
-# 💬 FINAL NOTES
+## Important Notes
 
-- Replace `{username}` and `{password}` if using Jupyter  
+- Do NOT upload large datasets into JupyterHub workspace  
+- Always use S3 paths for data  
+- JupyterHub is only for running code — not for storing data  

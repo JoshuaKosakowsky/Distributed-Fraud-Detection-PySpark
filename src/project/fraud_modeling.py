@@ -112,7 +112,7 @@ def summarize_binary_predictions(
     model_name: str = "Model"
 ) -> dict:
     """
-    Compute TN, FP, FN, TP and fraud-focused precision/recall/F1.
+    Compute TN, FP, FN, TP and fraud-focused / non-fraud-focused metrics.
     """
     cm = (
         pred_df.groupBy(label_col, pred_col)
@@ -137,6 +137,8 @@ def summarize_binary_predictions(
         if (fraud_precision + fraud_recall) > 0 else 0.0
     )
 
+    nonfraud_recall = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
     return {
         "model": model_name,
         "tn": tn,
@@ -145,7 +147,8 @@ def summarize_binary_predictions(
         "tp": tp,
         "fraud_precision": fraud_precision,
         "fraud_recall": fraud_recall,
-        "fraud_f1": fraud_f1
+        "fraud_f1": fraud_f1,
+        "nonfraud_recall": nonfraud_recall
     }
 
 
@@ -163,6 +166,7 @@ def build_comparison_df(spark, summaries: list) -> DataFrame:
             float(round(s["fraud_precision"], 4)),
             float(round(s["fraud_recall"], 4)),
             float(round(s["fraud_f1"], 4)),
+            float(round(s["nonfraud_recall"], 4)),
         )
         for s in summaries
     ]
@@ -177,7 +181,8 @@ def build_comparison_df(spark, summaries: list) -> DataFrame:
             "tp",
             "fraud_precision",
             "fraud_recall",
-            "fraud_f1"
+            "fraud_f1",
+            "nonfraud_recall"
         ]
     )
 
