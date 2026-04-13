@@ -9,7 +9,12 @@ RUN chown -R jovyan:users /home/jovyan/work
 
 USER jovyan
 
-RUN pip install --no-cache-dir pyyaml pandas matplotlib seaborn && \
+RUN pip install --no-cache-dir  \
+                pyyaml  \
+                pandas  \
+                matplotlib  \
+                seaborn  \
+                plotly && \
     pip install --no-cache-dir -e .
 
 CMD ["bash"]
