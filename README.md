@@ -1,233 +1,239 @@
-# MSBX 5420 Final Project
-## Distributed Data Modeling & Analysis with PySpark
-
-This repository provides a **reproducible, scalable data analytics framework** for the MSBX 5420 Final Project.
-
-The project is designed to support:
-
-- Large-scale data processing using **PySpark**
-- Local development using **Docker**
-- Distributed execution on **AWS EMR clusters**
-- Collaborative team workflows using a structured codebase
+# MSBX 5420 Final Project  
+## Detecting and Preventing Credit Card Fraud Through Code-Based Solutions  
+### Distributed Data Modeling & Analysis with PySpark  
 
 ---
 
-## 🚀 Quick Start
+## Course Information
+**Course:** MSBX 5420 – Unstructured and Distributed Data Modeling & Analysis  
+**Institution:** University of Colorado Boulder  
 
 ---
 
-## 🪟 Windows
-
-### 1. Install Required Software
-
-- Docker Desktop  
-- GitHub Desktop (or Git)  
-- VS Code (recommended)
-
-Ensure Docker Desktop is running before starting.
+## Project Team
+- Lora Abeyta
+- Stephanie Furst
+- Joshua Kosakowsky
 
 ---
 
-### 2. Clone the Repository
+## Project Overview
 
-Using GitHub Desktop:
+This project develops a **scalable, distributed fraud detection framework** using PySpark to analyze large-scale credit card transaction data.
 
-- File → Clone Repository
-- Select this repo
+The objective is to identify fraudulent behavior within a highly imbalanced dataset by leveraging:
 
-Or via terminal:
+- Distributed data processing
+- Feature engineering
+- Class imbalance mitigation strategies
+- Machine learning models
+- Evaluation metrics aligned to real-world fraud detection tradeoffs
 
-```bash
-git clone https://github.com/JoshuaKosakowsky/MSBX_Final_Project_Spark.git
-cd MSBX_Final_Project_Spark
-```
-
----
-
-### 3. Start the Development Environment
-
-```powershell
-.\scripts\up.ps1
-```
+The project emphasizes **practical decision-making**, particularly the balance between fraud detection and minimizing false positives.
 
 ---
 
-### 4. Open Jupyter
+## Repository Navigation
 
-Go to:
+### Core Notebooks
 
-http://localhost:8888
+- '''notebooks/01_eda_local.ipynb'''  
+  Exploratory Data Analysis (EDA) and initial data understanding
 
-Open:
+- '''notebooks/03_ml_fraud_modeling.ipynb'''  
+  Model development, parameter tuning, and evaluation
 
-notebooks/00_run_pipeline.ipynb
-
----
-
-## 🍎 macOS
-
-### 1. Install Required Software
-
-- Docker Desktop for Mac
-- Git
-- VS Code (recommended)
-
-Install Git if needed:
-
-```bash
-xcode-select --install
-```
-
-(Optional) Install Homebrew:
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Verify installations:
-
-```bash
-docker --version
-git --version
-```
-
-Ensure Docker Desktop is running before continuing.
+- '''emr/Credit_Card_Fraud_Detection_Case_Study.ipynb'''  
+  Integrated workflow combining EDA, feature engineering, and modeling for execution on Docker or AWS EMR
 
 ---
 
-### 2. Clone the Repository
+### Source Code
+- ```src/project/transform.py```  
+  Data cleaning and feature engineering
 
-```bash
-git clone https://github.com/JoshuaKosakowsky/MSBX_Final_Project_Spark.git
-cd MSBX_Final_Project_Spark
-```
+- ```src/project/fraud_modeling.py```  
+  Reproducible machine learning workflows, including training, tuning, and evaluation
 
----
+- ```src/project/spark_session.py```  
+  Spark session configuration
 
-### 3. Start the Development Environment
+  - ```src/project/schemas.py```  
+  Explicit schema definitions for structured data processing
 
-```bash
-docker compose -f docker/docker-compose.yml up --build
-```
-
----
-
-### 4. Open Jupyter
-
-Go to:
-
-http://localhost:8888
-
-Open:
-
-notebooks/00_run_pipeline.ipynb
+- ```src/project/config.py```  
+  Centralized configuration management
 
 ---
 
-## 🛑 Stop the Environment
+### Configuration
+- ```configs/local.yaml```  
+  Local execution parameters
 
-### Windows
-
-```powershell
-.\scripts\down.ps1
-```
-
-### macOS
-
-```bash
-docker compose -f docker/docker-compose.yml down
-```
+- ```configs/cluster.yaml```  
+  AWS EMR execution parameters
 
 ---
 
-## 📁 Project Structure
-
-MSBX_Final_Project_Spark/
-
-- src/project/        → Core PySpark pipeline code  
-- notebooks/          → Exploration and presentation notebooks  
-- configs/            → Environment configuration  
-- docker/             → Docker setup  
-- scripts/            → Start/stop scripts  
-- data/               → Raw/processed data (not committed)  
-- outputs/            → Generated tables/figures  
+### Outputs
+- ```data/models/```  
+  Saved model outputs and experiment results (Parquet)
 
 ---
 
-## 🧠 Development Philosophy
+## Data Description
 
-- Notebooks are for exploration and presentation only  
-- All logic lives in `src/project/`  
-- Configuration is externalized in `configs/`  
-- No hard-coded file paths  
+The dataset consists of **~1.3 million credit card transactions** with a binary fraud label:
 
-Pipeline flow:
+- ```is_fraud = 1``` → Fraudulent transaction  
+- ```is_fraud = 0``` → Legitimate transaction  
 
-Ingest → Transform → Analyze → Output
-
----
-
-## ⚙️ Local vs Cluster Execution
-
-Local:
-
-configs/local.yaml  
-
-Cluster:
-
-configs/cluster.yaml  
+Key characteristics:
+- Severe class imbalance (fraud << non-fraud)
+- Transactional, temporal, and geographic features
+- Realistic fraud detection constraints
 
 ---
 
-## 🔥 Why Docker?
+## Methodology
 
-Without Docker:
-
-- Inconsistent environments  
-- Dependency issues  
-
-With Docker:
-
-- Reproducible environment  
-- Same setup for all team members  
-- Easy onboarding  
+### 1. Data Processing
+- Distributed ingestion using PySpark
+- Schema enforcement and data cleaning
+- Transformation into analysis-ready format
 
 ---
 
-## 🧪 Running Without Notebook (Optional)
+### 2. Feature Engineering
+Key engineered features include:
 
-```bash
-python -m project.cli --config configs/local.yaml
-```
+- Temporal indicators (hour, day, weekend, night activity)
+- Transaction amount transformations (log scaling, high-amount flags, relative comparisons)
+- Geographic distance proxy between user and merchant
 
----
-
-## 📊 Spark UI
-
-http://localhost:4040
+These features are designed to reflect **behavioral fraud patterns**.
 
 ---
 
-## 📌 Team Guidelines
+### 3. Handling Class Imbalance
+Multiple strategies were evaluated:
 
-- Do NOT commit raw datasets  
-- Keep logic inside `src/project/`  
-- Use notebooks only for exploration  
-- Make meaningful commits  
-- Coordinate structural changes  
+- Undersampling majority class  
+- Oversampling minority class  
+- Hybrid sampling approaches  
+- Class weighting in models  
 
----
-
-## 🎯 Course Deliverables
-
-- Project proposal  
-- Project presentation  
-- PySpark analysis  
-- Final report  
-- AWS EMR deployment  
+The goal was to improve fraud detection without overwhelming false positives.
 
 ---
 
-## 👨‍💻 MSBX 5420 Final Project Team
+### 4. Modeling Approaches
 
-University of Colorado Boulder
+#### Logistic Regression
+- Interpretable baseline model  
+- Tuned using:
+  - Regularization (regParam)
+  - Elastic Net mixing
+  - Iterations
+  - Classification threshold  
+
+#### Random Forest
+- Nonlinear model capturing complex interactions  
+- Tuned using:
+  - Number of trees  
+  - Minimum instances per node  
+  - Feature subset strategy  
+  - Maximum tree depth  
+ 
+---
+
+### 5. Evaluation Metrics
+
+Given the business context, standard accuracy is insufficient.
+
+Primary metrics:
+
+- **Fraud Recall**  
+  Ability to detect fraudulent transactions
+
+- **Fraud Precision**  
+  Accuracy of fraud predictions
+
+- **F1 Score**  
+  Balance between precision and recall
+
+- **Non-Fraud Recall**  
+  Ensures legitimate transactions are not incorrectly declined
+
+---
+
+## Key Insights
+
+- Class imbalance significantly impacts model performance
+- Threshold tuning is critical for aligning with business goals
+- Feature engineering improves model separability
+- Random Forest demonstrates stronger fraud detection performance, with increased computational cost
+- Tradeoffs between recall and precision must be carefully managed
+
+---
+
+## Pipeline Flow
+
+Data flows through the following stages:
+
+Ingest → Transform → Feature Engineering → Model Training → Evaluation → Output
+
+All major outputs are saved for reproducibility and visualization.
+
+---
+
+## Results and Outputs
+
+Model outputs and experiment results are stored as parquet files in:
+
+- ```data/models/lr_param_tuning```  
+- ```data/models/lr_threshold_tuning```  
+- ```data/models/rf_param_tuning```  
+- ```data/models/rf_depth_tuning```  
+- ```data/models/final_model_comparison```  
+
+These outputs support downstream analysis and visualization.
+
+---
+
+## Project Scope
+
+This project includes:
+
+- Distributed data processing with PySpark  
+- Feature engineering for fraud detection  
+- Machine learning model development and tuning  
+- Evaluation using business-relevant metrics  
+- Scalable execution on AWS EMR  
+- Structured streaming simulation  
+
+---
+
+## Notes for Review
+
+- Notebooks are organized in logical execution order
+- Core logic is modularized in ```src/project/```  
+- Outputs are persisted for reproducibility  
+- Visualizations are separated for clarity and presentation
+- The Credit Card Fraud Detection Case Study notebook provides a consolidated workflow for EMR-based execution, combining EDA and modeling into a single pipeline  
+
+---
+
+## Conclusion
+
+This project demonstrates how distributed data systems and machine learning can be combined to address real-world fraud detection challenges.
+
+The approach prioritizes:
+
+- Scalability  
+- Interpretability  
+- Practical decision-making  
+
+while maintaining strong analytical rigor.
+
+---

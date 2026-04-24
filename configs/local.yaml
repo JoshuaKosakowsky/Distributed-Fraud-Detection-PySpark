@@ -5,10 +5,10 @@ paths:
   raw: "data/raw/credit_card_transactions.csv"
   raw_local: "data/raw"
   raw_sample: "data/sample"
-  raw_s3: "s3://your-team-bucket/credit-card-transactions/raw"
+  raw_s3: "s3://msbx5420-2026/teams/team_15/data/raw/credit_card_transactions.csv"
   processed: "data/processed"
-  outputs_tables: "outputs/tables"
-  outputs_figures: "outputs/figures"
+  outputs_tables: "data/models"
+  outputs_figures: "data/models"
   stream_batches: "data/stream/batches"
   stream_input: "data/stream/input"
 

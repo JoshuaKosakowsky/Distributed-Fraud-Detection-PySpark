@@ -79,11 +79,8 @@ Those downstream datasets may intentionally differ from the raw contract.
 Although many fields are technically nullable in the Spark schema for ingestion flexibility, the following columns are considered **required for usable analytical and modeling records**:
 
 - `trans_date_trans_time`
-- `cc_num`
-- `merchant`
 - `category`
 - `amt`
-- `trans_num`
 - `is_fraud`
 
 These fields are required because they are either:
@@ -118,10 +115,6 @@ Records missing these values may be dropped or excluded during cleaning, dependi
 - Must be parseable as a timestamp
 - Should align logically with `unix_time`
 - Future timestamps would be considered suspicious in a production setting, but may still be accepted in this historical dataset if present and validated
-
-### `trans_num`
-- Expected to uniquely identify a raw transaction record
-- Duplicate `trans_num` values in the raw dataset should be investigated
 
 ### Geographic Fields
 - `lat`, `long`, `merch_lat`, and `merch_long` should be valid numeric coordinates when present

@@ -31,19 +31,6 @@ data/raw/credit_card_transactions.csv
 
 ---
 
-## 🧪 Sample Data
-
-A small sample dataset may be included in:
-
-data/sample/
-
-This is used for:
-- testing
-- quick development
-- fallback if full dataset is missing
-
----
-
 ## ☁️ AWS / EMR Setup
 
 The full dataset will be uploaded to S3:
@@ -71,5 +58,4 @@ configs/cluster.yaml
 | Environment | Data Source |
 |------------|------------|
 | Local      | data/raw/ |
-| Fallback   | data/sample/ |
 | AWS EMR    | S3 |
