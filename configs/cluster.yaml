@@ -2,10 +2,8 @@ app_name: "MSBX5420 Final Project"
 env: "cluster"
 
 paths:
-  rraw: "s3://your-bucket-name/credit-card-transactions/credit_card_transactions.csv" #PLACEHOLDER
-  processed: "s3://YOUR-BUCKET/processed"
-  outputs_tables: "s3://YOUR-BUCKET/outputs/tables"
-  outputs_figures: "outputs/figures"   # figures often generated locally after download
+  rraw: "s3://msbx5420-2026/teams/team_15/data/raw/credit_card_transactions.csv"
+
 
 spark:
   master: null                          # cluster provides this
