@@ -37,13 +37,13 @@ The project emphasizes **practical decision-making**, particularly the balance b
 
 ### Core Notebooks
 
-- '''notebooks/01_eda_local.ipynb'''  
+- ```notebooks/01_eda_local.ipynb```  
   Exploratory Data Analysis (EDA) and initial data understanding
 
-- '''notebooks/03_ml_fraud_modeling.ipynb'''  
+- ```notebooks/03_ml_fraud_modeling.ipynb```  
   Model development, parameter tuning, and evaluation
 
-- '''emr/Credit_Card_Fraud_Detection_Case_Study.ipynb'''  
+- ```emr/Credit_Card_Fraud_Detection_Case_Study.ipynb```  
   Integrated workflow combining EDA, feature engineering, and modeling for execution on Docker or AWS EMR
 
 ---
